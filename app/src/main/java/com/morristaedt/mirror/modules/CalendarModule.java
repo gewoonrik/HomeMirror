@@ -10,8 +10,10 @@ import android.util.Log;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -19,17 +21,28 @@ import java.util.Objects;
  */
 public class CalendarModule {
     public interface CalendarListener {
-        void onCalendarUpdate(String title, String details);
+        void onCalendarUpdate(List<CalendarItem> calendarItems);
     }
 
-    public static void getCalendarEvents(final Context context, final CalendarListener calendarListener) {
+    public static class CalendarItem
+    {
+        public final String title;
+        public final String details;
+
+        public CalendarItem(String title, String details) {
+            this.title = title;
+            this.details = details;
+        }
+    }
+
+    public static void getCalendarEvents(final Context context, final CalendarListener calendarListener, final int nrOfItems) {
         new AsyncTask<Void, Void, Void>() {
-            String title = null;
-            String details = null;
+            List<CalendarItem> items = new ArrayList<CalendarItem>();
 
             @Override
             protected void onPostExecute(Void aVoid) {
-                calendarListener.onCalendarUpdate(title, details);
+
+                calendarListener.onCalendarUpdate(items);
             }
 
             @Override
@@ -61,19 +74,20 @@ public class CalendarModule {
                 cursor = contentResolver.query(CalendarContract.Events.CONTENT_URI, colsToQuery,
                         "( dtstart >" + start + ") and (dtend  <" + endOfDay.getTimeInMillis() + ")",
                         null, "dtstart ASC");
-
-                if (cursor.getCount() > 0) {
-                    cursor.moveToFirst();
-                    title = cursor.getString(0);
+                cursor.moveToFirst();
+                int i = 0;
+                while(i < nrOfItems && !cursor.isAfterLast())   {
+                    String title = cursor.getString(0);
                     Calendar startTime = Calendar.getInstance();
                     startTime.setTimeInMillis(cursor.getLong(1));
                     Calendar endTime = Calendar.getInstance();
                     endTime.setTimeInMillis(cursor.getLong(2));
                     DateFormat formatter = SimpleDateFormat.getTimeInstance(DateFormat.SHORT);
-                    details = formatter.format(startTime.getTime()) + " - " + formatter.format(endTime.getTime());
+                    String details = formatter.format(startTime.getTime()) + " - " + formatter.format(endTime.getTime());
                     if (!cursor.getString(3).equals("")) {
-                      details += " ~ " + cursor.getString(3);
+                        details += " ~ " + cursor.getString(3);
                     }
+                    items.add(new CalendarItem(title, details));
                 }
 
                 cursor.close();

@@ -24,6 +24,7 @@ import com.morristaedt.mirror.modules.DimModule;
 import com.morristaedt.mirror.modules.ForecastModule;
 import com.morristaedt.mirror.modules.MoodModule;
 import com.morristaedt.mirror.modules.NewsModule;
+import com.morristaedt.mirror.modules.SpeechRecognitionModule;
 import com.morristaedt.mirror.modules.XKCDModule;
 import com.morristaedt.mirror.modules.YahooFinanceModule;
 import com.morristaedt.mirror.receiver.AlarmReceiver;
@@ -52,6 +53,8 @@ public class MirrorActivity extends ActionBarActivity {
     private ImageView mXKCDImage;
     private MoodModule mMoodModule;
     private DimModule mDimModule;
+    private SpeechRecognitionModule mSpeechRecognitionModule = new SpeechRecognitionModule(this);
+
 
     private TextView mNewsHeadline;
     private TextView mCalendarTitleText;
@@ -143,7 +146,10 @@ public class MirrorActivity extends ActionBarActivity {
 
     private CalendarModule.CalendarListener mCalendarListener = new CalendarModule.CalendarListener() {
         @Override
-        public void onCalendarUpdate(String title, String details) {
+        public void onCalendarUpdate(List<CalendarModule.CalendarItem> items) {
+            CalendarModule.CalendarItem item = items.get(0);
+            String title = item.title;
+            String details = item.details;
             mCalendarTitleText.setVisibility(title != null ? View.VISIBLE : View.GONE);
             mCalendarTitleText.setText(title);
             mCalendarDetailsText.setVisibility(details != null ? View.VISIBLE : View.GONE);
@@ -158,6 +164,7 @@ public class MirrorActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        System.out.println("memory bitch "+Runtime.getRuntime().maxMemory());
         setContentView(R.layout.activity_main);
         mConfigSettings = new ConfigurationSettings(this);
         AlarmReceiver.startMirrorUpdates(this);
@@ -203,12 +210,20 @@ public class MirrorActivity extends ActionBarActivity {
             mXKCDImage.setColorFilter(colorFilterNegative); // not inverting for now
         }
 
+        mSpeechRecognitionModule.addListener("calendar", new SpeechRecognitionModule.SpeechRecognitionListener() {
+            @Override
+            public void onRecognizedSpeech() {
+                System.out.println("showing calendar!!!");
+            }
+        });
+
     }
 
     @Override
     protected void onResume()   {
         super.onResume();
         setViewState();
+        mSpeechRecognitionModule.start();
     }
 
     @Override
@@ -218,6 +233,7 @@ public class MirrorActivity extends ActionBarActivity {
         if (mMoodModule != null) {
             mMoodModule.release();
         }
+        mSpeechRecognitionModule.stop();
 
     }
 
@@ -258,7 +274,7 @@ public class MirrorActivity extends ActionBarActivity {
         }
 
         if (mConfigSettings.showNextCalendarEvent()) {
-            CalendarModule.getCalendarEvents(this, mCalendarListener);
+            CalendarModule.getCalendarEvents(this, mCalendarListener, 1);
         } else {
             mCalendarTitleText.setVisibility(View.GONE);
             mCalendarDetailsText.setVisibility(View.GONE);
@@ -279,7 +295,6 @@ public class MirrorActivity extends ActionBarActivity {
 
         mDimModule = new DimModule();
         mDimModule.getScreenBrightness(mDimListener);
-
 
     }
 
