@@ -126,7 +126,7 @@ public class MarqueeView extends LinearLayout {
                 MarqueeView.this.mTextField.startAnimation(MarqueeView.this.mMoveTextOut);
             }
         };
-        this.postDelayed(this.mAnimationStartRunnable, (long)this.mAnimationPause);
+        this.postDelayed(this.mAnimationStartRunnable, (long) this.mAnimationPause);
     }
 
     public void reset() {
@@ -138,7 +138,6 @@ public class MarqueeView extends LinearLayout {
         this.mTextField.clearAnimation();
         this.mStarted = false;
         this.mMoveTextOut.reset();
-        this.mMoveTextIn.reset();
         this.invalidate();
     }
 
@@ -149,37 +148,20 @@ public class MarqueeView extends LinearLayout {
         this.mMarqueeNeeded = mTextWidth > (float)this.getMeasuredWidth();
         this.mTextDifference = Math.abs(mTextWidth - (float)this.getMeasuredWidth()) + 5.0F;
         int duration = (int)(this.mTextDifference * (float)this.mSpeed);
-        this.mMoveTextOut = new TranslateAnimation(0.0F, -this.mTextDifference, 0.0F, 0.0F);
-        this.mMoveTextOut.setDuration((long)duration);
+        MarqueeView.this.mTextField.setX(MarqueeView.this.getMeasuredWidth());
+        this.mMoveTextOut = new TranslateAnimation(0, -this.mTextDifference-2*this.getMeasuredWidth(), 0.0F, 0.0F);
+        this.mMoveTextOut.setDuration((long) duration);
         this.mMoveTextOut.setInterpolator(this.mInterpolator);
         this.mMoveTextOut.setFillAfter(true);
-        this.mMoveTextIn = new TranslateAnimation(-this.mTextDifference, 0.0F, 0.0F, 0.0F);
-        this.mMoveTextIn.setDuration((long)duration);
-        this.mMoveTextIn.setStartOffset((long)this.mAnimationPause);
-        this.mMoveTextIn.setInterpolator(this.mInterpolator);
-        this.mMoveTextIn.setFillAfter(true);
         this.mMoveTextOut.setAnimationListener(new Animation.AnimationListener() {
             public void onAnimationStart(Animation animation) {
                 MarqueeView.this.expandTextView();
             }
 
             public void onAnimationEnd(Animation animation) {
-                if(!MarqueeView.this.mCancelled) {
-                    MarqueeView.this.mTextField.startAnimation(MarqueeView.this.mMoveTextIn);
-                }
-            }
-
-            public void onAnimationRepeat(Animation animation) {
-            }
-        });
-        this.mMoveTextIn.setAnimationListener(new Animation.AnimationListener() {
-            public void onAnimationStart(Animation animation) {
-            }
-
-            public void onAnimationEnd(Animation animation) {
-                MarqueeView.this.cutTextView();
-                if(!MarqueeView.this.mCancelled) {
-                    MarqueeView.this.startTextFieldAnimation();
+                if (!MarqueeView.this.mCancelled) {
+                    MarqueeView.this.mTextField.setX(MarqueeView.this.getMeasuredWidth());
+                    MarqueeView.this.mTextField.startAnimation(MarqueeView.this.mMoveTextOut);
                 }
             }
 
@@ -206,7 +188,6 @@ public class MarqueeView extends LinearLayout {
                 final boolean continueAnimation = MarqueeView.this.mStarted;
                 MarqueeView.this.reset();
                 MarqueeView.this.prepareAnimation();
-                MarqueeView.this.cutTextView();
                 MarqueeView.this.post(new Runnable() {
                     public void run() {
                         if(continueAnimation) {
@@ -226,12 +207,4 @@ public class MarqueeView extends LinearLayout {
         this.mTextField.setLayoutParams(lp);
     }
 
-    private void cutTextView() {
-        if(this.mTextField.getWidth() != this.getMeasuredWidth()) {
-         //   android.view.ViewGroup.LayoutParams lp = this.mTextField.getLayoutParams();
-           // lp.width = this.getMeasuredWidth();
-            //this.mTextField.setLayoutParams(lp);
-        }
-
-    }
 }
