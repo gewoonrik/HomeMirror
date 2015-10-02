@@ -49,7 +49,6 @@ public class DimModule  {
 
     }
 
-    private DimListener listener;
 
     public DimModule()
     {
@@ -60,8 +59,9 @@ public class DimModule  {
     public void getScreenBrightness(DimListener listener) {
         Calendar now = Calendar.getInstance();
         int hour = now.get(Calendar.HOUR_OF_DAY);
-        if(hour > 22 || hour < 7) {
-            listener.onDim(10);
+        if(hour > 21 || hour < 7) {
+            //completely dim between 22 and 7
+            listener.onDim(0);
         }
         else
         {
